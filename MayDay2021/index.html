@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>欢乐嘉年华</title>
+    <link rel="stylesheet" type="text/css" href="../common/css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="main.css?v8" />
+    <script>
+      let htmlWidth = document.documentElement.clientWidth || document.body.clientWidth;
+      let htmlDom = document.getElementsByTagName('html')[0];
+      // 设置html的font-size
+      htmlDom.style.fontSize = htmlWidth / 10 + 'px';
+      // console.log(document.body.clientWidth)
+      console.log(navigator.userAgent.indexOf('Trident'))
+      window.addEventListener('resize', function() {
+        let htmlWidth = document.documentElement.clientWidth || document.body.clientWidth;
+        htmlDom.style.fontSize = htmlWidth / 10 + 'px';
+      });
+    </script>
+    <style>
+      html{
+        font-size: 37.5px;
+      }
+      [v-cloak] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+  <div id="app">
+    <div class="top_box"></div>
+    <div class="act_wrap">
+      <div class="act_nav">
+        <button @click="changeBar(1)"
+                :style="{background: bar==1?'url(img/btn11.png)':'url(img/btn10.png)'}"
+        ></button>
+        <button @click="changeBar(2)"
+                :style="{background: bar==2?'url(img/btn21.png)':'url(img/btn20.png)'}"
+        ></button>
+      </div>
+      <div class="act_item" v-if="bar==1">
+        <div class="rule_img">
+          <div class="info_btn" @click="$('#award_info').css('display','flex')"></div>
+        </div>
+        <div class="rank_wrap">
+          <div class="rank_con" v-cloak>
+            <div class="rank_nav">
+              <button :class="rankBar==2?'rank_active2':''" @click="changeRank(2)"></button>
+              <button :class="rankBar==1?'rank_active1':''" @click="changeRank(1)"></button>
+            </div>
+            <div class="rank_item" v-for="(item,index) in rcostlist" v-if="rankBar==2">
+              <div class="rank_box">
+                <div class="rank_left">
+                  <div class="rank_ranking">{{item.userRank}}</div>
+                  <div class="rank_img" @click="jump2native('userinfo',item.uid)"><img :src="item.appface"></div>
+                  <div class="rank_info">
+                    <div class="rank_name">
+                      <div>{{item.nickname}}</div>
+                      <div class="level_img" :style="'background-image: url('+'../common/img/level/ml/'+girlCharm(item.level)+'.png?v1'+')'">
+                        <div class="level_num">{{item.level}}</div>
+                      </div>
+                    </div>
+                    <div class="rank_num">累计<span>{{item.value}}</span>欢乐值</div>
+                  </div>
+                </div>
+                <button v-if="item.isFollow==0" class="rank_btn" @click="follow(item.uid)">关注</button>
+              </div>
+            </div>
+            <div class="rank_item" v-for="(item,index) in costlist" v-if="rankBar==1">
+              <div class="rank_box">
+                <div class="rank_left">
+                  <div class="rank_ranking">{{item.userRank}}</div>
+                  <div class="rank_img" @click="jump2native('userinfo',item.uid)"><img :src="item.appface"></div>
+                  <div class="rank_info">
+                    <div class="rank_name">
+                      <div>{{item.nickname}}</div>
+                      <div class="level_img" :style="'background-image: url('+'../common/img/level/nl/'+boyEnergy(item.level)+'.png?v1'+')'">
+                        <div class="level_num">{{item.level}}</div>
+                      </div>
+                    </div>
+                    <div class="rank_num">累计<span>{{item.value}}</span>欢乐值</div>
+                  </div>
+                </div>
+                <button v-if="item.isFollow==0" class="rank_btn" @click="follow(item.uid)">关注</button>
+              </div>
+            </div>
+          </div>
+          <div class="bg2"></div>
+        </div>
+      </div>
+      <div class="act_item" v-if="bar==2">
+        <div class="pan_box">
+          <div class="round">
+            <div id="turnImg"
+                 :style="'background-image: url('+'img/pan'+myInfo.sex+'.png?v1'+')'">
+            </div>
+            <div class="begin">
+              <img src="img/arrow.png" alt="" />
+            </div>
+          </div>
+          <div class="get_award" v-cloak>
+            <div v-if="taskCon.turntable_num>0"
+                 class="get_award_btn"
+                 @click="turntable()"
+                 id="get_award_btn">
+              <div class="get_start">开始抽奖</div>
+              <div class="get_num">（还剩{{taskCon.turntable_num}}张抽奖券）</div>
+            </div>
+            <div v-else class="get_award_btn">
+              <div class="get_start">开始抽奖</div>
+              <div class="get_num">（还剩0张抽奖券）</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="task_wrap" v-if="taskList.length!=0">
+          <div class="record-btn" @click="getRecordList()">抽奖记录</div>
+          <div class="task_tit"><img src="img/task_tit.png"/></div>
+          <div class="task_item" v-for="(item,index) in taskList">
+            <div class="task_box">
+              <div class="task_left">
+                <div class="task_ranking">+{{item.award}}</div>
+                <div class="task_info">
+                  <div class="task_name">
+                    <div>{{item.content}}</div>
+                  </div>
+                  <div class="task_num">完成：{{item.tips}}</div>
+                </div>
+              </div>
+              <button v-if="item.status==1" class="task_btn task_btn1" @click="getAwardNum(item.taskid)">领取</button>
+              <button v-else class="task_btn">领取</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="tips">{{tipsText}}</div>
+    <div class="my_box" v-if="bar==1&&myInfo" v-cloak>
+      <div class="my_left">
+        <div class="my_img"><img :src="myInfo.appface"></div>
+        <div class="my_info">
+          <div class="my_name">{{myInfo.nickname}}</div>
+          <div class="my_num">
+            <span class="my_value">欢乐值：{{myInfo.myValue}}</span></div>
+        </div>
+      </div>
+      <div class="my_ranking" v-if="myInfo.rank!=0">
+        <span v-if="myInfo.rank>0&&myInfo.rank<100">第{{myInfo.rank}}名</span>
+        <span v-else>排名99+</span>
+
+      </div>
+      <div class="my_ranking" v-else>
+        暂未上榜
+      </div>
+    </div>
+    <div id="record_box">
+      <div class="record-con">
+        <div class="record-tit">
+          <img src="img/record_tit.png">
+        </div>
+        <div class="record-list" v-cloak v-if="recordList.length!=0">
+          <div class="record-list-item" v-for="(item,key) in recordList">
+            <div class="record-left">
+              <div class="award_tit">{{item.title}}</div>
+              <div class="award_time">{{item.time}}</div>
+            </div>
+            <div class="award_num" :class="item.type==2?'award_num2':''">{{item.tips}}</div>
+          </div>
+        </div>
+        <div class="no_data" v-else>
+          暂无记录
+        </div>
+
+      </div>
+      <div class="close-btn" @click="$('#record_box').css('display','none')">
+        <img src="img/close.png">
+      </div>
+    </div>
+    <div id="award_info">
+      <div class="info-con">
+        <div class="info-tit">
+          <img src="img/info_tit.png">
+        </div>
+        <div class="info_con">
+          <img src="img/info_con.png">
+        </div>
+      </div>
+      <div class="close-btn" @click="$('#award_info').css('display','none')">
+        <img src="img/close.png">
+      </div>
+    </div>
+    <div id="shade_box">
+      <div class="shade-con">
+        <div class="shade-tit">
+          <img src="img/get_tit.png"/>
+        </div>
+        <div class="img-wrap" v-cloak>
+          <div class="img_url"><img :src="award.img_url"></div>
+<!--            <img src="img/1.png">-->
+<!--          <div class="award-name">派对之夜头饰x1天</div>-->
+            <div class="award-name">{{award.word}}</div>
+        </div>
+        <div class="get-btn"
+             @click="closeAward()">
+        </div>
+<!--        <div class="tips">已放置 我的-魔法商城 内</div>-->
+      </div>
+    </div>
+  </div>
+
+  <script src="../common/js/jquery.min.js"></script>
+  <script src="../common/js/velocity.min.js"></script>
+  <script src="../common/js/vue.min.js"></script>
+  <script src="../library/constants.js" type="text/javascript"></script>
+  <script src="../library/util.js" type="text/javascript"></script>
+  <script src="main.js?v9" type="text/javascript"></script>
+  </body>
+</html>
